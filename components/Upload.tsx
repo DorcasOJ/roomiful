@@ -1,11 +1,13 @@
 import { CheckCircle, ImageIcon, UploadIcon } from "lucide-react";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useOutletContext } from "react-router";
 import {
   PROGRESS_INCREMENT,
   REDIRECT_DELAY_MS,
   PROGRESS_INTERVAL_MS,
 } from "liib/constant";
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 interface UploadProps {
   onComplete?: (base64Data: string) => void;
@@ -15,9 +17,23 @@ const Upload = ({ onComplete }: UploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { isSignedIn } = useOutletContext<AuthContext>();
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const processFile = useCallback(
     (file: File) => {
@@ -25,10 +41,32 @@ const Upload = ({ onComplete }: UploadProps) => {
 
       if (!file.type.startsWith("image/")) return;
 
+      // Enforce max size BEFORE FileReader
+      if (file.size > MAX_FILE_SIZE) {
+        console.error("File exceeds 50MB limit");
+        return;
+      }
+
+      // Clear existing timers before starting new ones
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        // intervalRef.current = null;
+      }
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        // timeoutRef.current = null;
+      }
+
       setFile(file);
       setProgress(0);
 
       const reader = new FileReader();
+
+      reader.onerror = () => {
+        setFile(null);
+        setProgress(0);
+      };
 
       reader.onloadend = () => {
         const base64Data = reader.result as string;
@@ -40,9 +78,11 @@ const Upload = ({ onComplete }: UploadProps) => {
             if (next >= 100) {
               if (intervalRef.current) {
                 clearInterval(intervalRef.current);
+                intervalRef.current = null;
               }
 
-              setTimeout(() => {
+              // ✅ Store timeout reference
+              timeoutRef.current = setTimeout(() => {
                 onComplete?.(base64Data);
               }, REDIRECT_DELAY_MS);
 
