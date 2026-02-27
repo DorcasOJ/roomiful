@@ -5,13 +5,12 @@ import {
   PROGRESS_INCREMENT,
   REDIRECT_DELAY_MS,
   PROGRESS_INTERVAL_MS,
-} from "liib/constant";
+  MAX_FILE_SIZE,
+} from "lib/constant";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-
-interface UploadProps {
-  onComplete?: (base64Data: string) => void;
-}
+// interface UploadProps {
+//   onComplete?: (base64Data: string) => void;
+// }
 
 const Upload = ({ onComplete }: UploadProps) => {
   const [file, setFile] = useState<File | null>(null);
