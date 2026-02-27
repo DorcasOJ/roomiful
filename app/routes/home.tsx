@@ -37,10 +37,11 @@ export default function Home() {
 
     if (!saved) {
       console.error("Failed to create project");
+      alert("Failed to create project. Please try again.");
       return false;
     }
 
-    setProjects((prev) => [newItem, ...prev]);
+    setProjects((prev) => [saved, ...prev]);
 
     navigate(`/visualizer/${newId}`, {
       state: {
@@ -119,7 +120,7 @@ export default function Home() {
           <div className="projects-grid">
             {projects.map(
               ({ id, name, renderedImage, sourceImage, timestamp }) => (
-                <div className="project-card group">
+                <div className="project-card group" key={id}>
                   <div className="preview">
                     <img src={renderedImage || sourceImage} alt="Project" />
 

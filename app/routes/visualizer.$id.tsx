@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router";
 
-const visualizerId = () => {
+const VisualizerId = () => {
   const location = useLocation();
   const { initialImage, name } = location.state || {};
   return (
@@ -20,4 +20,4 @@ const visualizerId = () => {
   );
 };
 
-export default visualizerId;
+export default VisualizerId;

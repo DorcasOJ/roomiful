@@ -8,9 +8,9 @@ import {
   MAX_FILE_SIZE,
 } from "lib/constant";
 
-interface UploadProps {
-  onComplete?: (base64Data: string) => void;
-}
+// interface UploadProps {
+//   onComplete?: (base64Data: string) => void;
+// }
 
 const Upload = ({ onComplete }: UploadProps) => {
   const [file, setFile] = useState<File | null>(null);

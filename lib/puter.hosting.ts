@@ -9,33 +9,37 @@ import {
   isHostedUrl,
 } from "./utils";
 
-type HostingConfig = {
-  subdomain: string;
-};
+// type HostingConfig = {
+//   subdomain: string;
+// };
 
-type HostedAsset = {
-  url: string;
-};
+// type HostedAsset = {
+//   url: string;
+// };
 
 // check if a sub domain is present in the key-value store
 
 export const getOrCreateHostingConfig =
   async (): Promise<HostingConfig | null> => {
-    // acces to existting db or chaon of key-value pairs
+    // access to existing db or chain of key-value pairs
     const existing = (await puter.kv.get(
       HOSTING_CONFIG_KEY,
     )) as HostingConfig | null;
 
     if (existing?.subdomain) {
-      subdomain: existing.subdomain;
+      return { subdomain: existing.subdomain };
     }
 
     const subdomain = createHostingSlug();
 
     try {
       const created = await puter.hosting.create(subdomain, ".");
-      return { subdomain: created.subdomain };
-    } catch ($e) {
+      const record: HostingConfig = { subdomain: created.subdomain };
+      await puter.kv.set(HOSTING_CONFIG_KEY, record);
+
+      // return { subdomain: created.subdomain };
+      return record;
+    } catch (e) {
       console.warn(`Could not find subdomain: ${e}`);
       return null;
     }
@@ -74,7 +78,7 @@ export const uploadImageToHosting = async ({
     await puter.fs.write(filePath, uploadFile);
     const hostedUrl = getHostedUrl({ subdomain: hosting.subdomain }, filePath);
     return hostedUrl ? { url: hostedUrl } : null;
-  } catch ($e) {
+  } catch (e) {
     console.warn(`Failed to store hosted image: ${e}`);
   }
 };

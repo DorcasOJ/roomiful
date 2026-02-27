@@ -3,7 +3,19 @@ export const HOSTING_CONFIG_KEY = "roomiful_hosting_config";
 export const HOSTING_DOMAIN_SUFFIX = ".puter.site";
 
 export const isHostedUrl = (value: unknown): value is string =>
-  typeof value === "string" && value.includes(HOSTING_DOMAIN_SUFFIX);
+  // typeof value === "string" && value.includes(HOSTING_DOMAIN_SUFFIX);
+  typeof value === "string" &&
+  (() => {
+    try {
+      const { hostname } = new URL(value);
+      return (
+        hostname === HOSTING_DOMAIN_SUFFIX.slice(1) ||
+        hostname.endsWith(HOSTING_DOMAIN_SUFFIX)
+      );
+    } catch {
+      return false;
+    }
+  })();
 
 export const createHostingSlug = () =>
   `roomiful-${Date.now().toString(36)}-${Math.random()
@@ -78,7 +90,11 @@ export const fetchBlobFromUrl = async (
   }
 
   try {
-    const response = await fetch(url);
+    // const response = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (!response.ok) throw new Error("Failed to fetch image");
     return {
       blob: await response.blob(),
@@ -96,10 +112,25 @@ export const imageUrlToPngBlob = async (url: string): Promise<Blob | null> => {
     const img = new Image();
     img.crossOrigin = "anonymous";
 
+    // const loaded = await new Promise<HTMLImageElement>((resolve, reject) => {
     const loaded = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error("Image load timeout")),
+        15000,
+      );
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error("Failed to load image"));
       img.src = url;
+
+      const cleanup = () => clearTimeout(timer);
+      img.onload = () => {
+        cleanup();
+        resolve(img);
+      };
+      img.onerror = () => {
+        cleanup();
+        reject(new Error("Failed to load image"));
+      };
     });
 
     const width = loaded.naturalWidth || loaded.width;
