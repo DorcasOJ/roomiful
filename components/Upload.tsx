@@ -36,10 +36,7 @@ const Upload = ({ onComplete }: UploadProps) => {
 
   const processFile = useCallback(
     (file: File) => {
-      if (!isSignedIn) {
-        alert("Please sign in to upload files");
-        return;
-      }
+      if (!isSignedIn) return;
 
       if (!file.type.startsWith("image/")) return;
 
@@ -104,10 +101,7 @@ const Upload = ({ onComplete }: UploadProps) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isSignedIn) {
-      alert("Please sign in to upload files");
-      return;
-    }
+    if (!isSignedIn) return;
     setIsDragging(true);
   };
 
@@ -122,10 +116,7 @@ const Upload = ({ onComplete }: UploadProps) => {
     e.stopPropagation();
     setIsDragging(false);
 
-    if (!isSignedIn) {
-      alert("Please sign in to upload files");
-      return;
-    }
+    if (!isSignedIn) return;
 
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
@@ -134,10 +125,7 @@ const Upload = ({ onComplete }: UploadProps) => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isSignedIn) {
-      alert("Please sign in to upload files");
-      return;
-    }
+    if (!isSignedIn) return;
 
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
